@@ -114,7 +114,7 @@ class TestDoc7 extends EnglishTest {
   
     val tester = new GraphTester(text)
 
-    val refugees = NodeSpec("2.4 million refugees", Quant("approximately"))
+    val refugees = NodeSpec("2.4 million refugees", Quant("approximately"), TimEx("January 2017"))
     val insecurity = NodeSpec("Widespread insecurity", Inc("Widespread"))
     val communities = NodeSpec("communities")
     val livelihoodActivities = NodeSpec("livelihood activities", Dec("disrupt"))

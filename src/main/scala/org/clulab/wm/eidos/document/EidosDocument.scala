@@ -16,7 +16,7 @@ class EidosDocument(sentences: Array[Sentence], text: Option[String]) extends Co
   var times: Option[Array[Seq[TimeInterval]]] = None
   var geolocs: Option[Array[Seq[GeoPhraseID]]] = None
   var dct: Option[DCT] = None
-  var context_window_size = 5
+  var context_window_size = 2
   var batch_size = 40
   type IntervalType = ((Int, Int), List[(LocalDateTime, LocalDateTime, Long)])
 

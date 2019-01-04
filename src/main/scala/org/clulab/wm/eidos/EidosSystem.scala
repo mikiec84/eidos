@@ -75,7 +75,7 @@ class EidosSystem(val config: Config = ConfigFactory.load("eidos")) extends Stop
     val negationHandler: NegationHandler,
     val expansionHandler: ExpansionHandler,
     val ontologyGrounders: Seq[EidosOntologyGrounder],
-    val timenorm: Option[TemporalNeuralParser],
+    val timenorm: Option[ThreadLocal[TemporalNeuralParser]],
     // val geonorm: Option[Geo_disambiguate_parser]
     val geonorm: Option[GeoDisambiguateParser]
 
@@ -150,12 +150,14 @@ class EidosSystem(val config: Config = ConfigFactory.load("eidos")) extends Stop
           if (word2vec) ontologies.par.map(ontology => EidosOntologyGrounder(ontology, mkDomainOntology(ontology, useCache), wordToVec)).seq
           else Seq.empty
 
-      val timenorm: Option[TemporalNeuralParser] = {
+      val timenorm: Option[ThreadLocal[TemporalNeuralParser]] = {
 
         if (!useTimeNorm) None
         else {
           // Be sure to use fork := true in build.sbt when doing this so that the dll is not loaded twice.
-          val timeNorm = new TemporalNeuralParser()
+          val timeNorm = new ThreadLocal[TemporalNeuralParser] {
+            override def initialValue = new TemporalNeuralParser()
+          }
           Some(timeNorm)
         }
       }
@@ -204,7 +206,8 @@ class EidosSystem(val config: Config = ConfigFactory.load("eidos")) extends Stop
     // Add the tags from the lexicons we load
     doc.sentences.foreach(addLexiconNER)
     // Time and Location
-    doc.parseTime(loadableAttributes.timenorm, documentCreationTime)
+    val threadTimeNorm = if (loadableAttributes.timenorm.isDefined) Some(loadableAttributes.timenorm.get.get) else None
+    doc.parseTime(threadTimeNorm, documentCreationTime)
     doc.parseGeoNorm(loadableAttributes.geonorm)
     // Document ID
     doc.id = filename

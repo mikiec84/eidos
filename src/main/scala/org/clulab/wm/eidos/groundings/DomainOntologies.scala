@@ -6,7 +6,7 @@ import org.clulab.wm.eidos.utils.Canonicalizer
 import org.slf4j.LoggerFactory
 
 object DomainOntologies {
-  val logger = LoggerFactory.getLogger(this.getClass())
+  protected lazy val logger = LoggerFactory.getLogger(this.getClass())
 
   def serializedPath(name: String, dir: String): String = s"$dir/$name.serialized"
 
@@ -63,3 +63,8 @@ object WHOOntology {
     DomainOntologies(ontologyPath, serializedPath, proc, canonicalizer: Canonicalizer, filter, useCache)
 }
 
+// Intervention Ontology
+object IntOntology {
+  def apply(ontologyPath: String, serializedPath: String, proc: Processor, canonicalizer: Canonicalizer, filter: Boolean = true, useCache: Boolean = false) =
+    DomainOntologies(ontologyPath, serializedPath, proc, canonicalizer: Canonicalizer, filter, useCache)
+}

@@ -7,7 +7,7 @@ import org.clulab.processors.clu._
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.sequences.LexiconNER
-import org.clulab.timenorm.TemporalCharbasedParser
+import org.clulab.timenorm.neural.TemporalNeuralParser
 import org.clulab.wm.eidos.actions.ExpansionHandler
 import org.clulab.wm.eidos.attachments.{HypothesisHandler, NegationHandler}
 import org.clulab.wm.eidos.context.GeoDisambiguateParser
@@ -77,7 +77,7 @@ class EidosSystem(val config: Config = ConfigFactory.load("eidos")) {
     val expansionHandler: ExpansionHandler,
     val ontologyGrounders: Seq[EidosOntologyGrounder],
     val multiOntologyGrounder: MultiOntologyGrounding,
-    val timenorm: Option[TemporalCharbasedParser],
+    val timenorm: Option[TemporalNeuralParser],
     val geonorm: Option[GeoDisambiguateParser]
   )
 
@@ -93,7 +93,6 @@ class EidosSystem(val config: Config = ConfigFactory.load("eidos")) {
     val           hedgingPath: String = eidosConf[String]("hedgingPath")
     val              cacheDir: String = eidosConf[String]("cacheDir")
     val      wordToVecPath: String = eidosConf[String]("wordToVecPath")
-    val  timeNormModelPath: String = eidosConf[String]("timeNormModelPath") // todo push to companion obj too
     val       useLexicons: Boolean = eidosConf[Boolean]("useLexicons")
     val   useEntityFinder: Boolean = eidosConf[Boolean]("useEntityFinder")
     val            useW2V: Boolean = eidosConf[Boolean]("useW2V")
@@ -139,14 +138,15 @@ class EidosSystem(val config: Config = ConfigFactory.load("eidos")) {
       val multiOntologyGrounder = new MultiOntologyGrounder(ontologyGrounders)
 
       // Temporal Parsing
-      val timenorm: Option[TemporalCharbasedParser] =
-          if (useTimeNorm)
-            FileUtils.withResourceAsFile(timeNormModelPath) { file =>
-              // Be sure to use fork := true in build.sbt when doing this so that the dll is not loaded twice.
-              Some(new TemporalCharbasedParser(file.getAbsolutePath))
-            }
-          else
-            None
+      val timenorm: Option[TemporalNeuralParser] = {
+
+        if (!useTimeNorm) None
+        else {
+            // Be sure to use fork := true in build.sbt when doing this so that the dll is not loaded twice.
+              val timeNorm = new TemporalNeuralParser()
+            Some(timeNorm)
+          }
+      }
 
       // Geospatial Parsing
       val geonorm: Option[GeoDisambiguateParser] =
@@ -190,8 +190,7 @@ class EidosSystem(val config: Config = ConfigFactory.load("eidos")) {
     // Add the tags from the lexicons we load
     doc.sentences.foreach(addLexiconNER)
     // Time and Location
-    doc.parseDCT(loadableAttributes.timenorm, documentCreationTime)
-    doc.parseTime(loadableAttributes.timenorm)
+    doc.parseTime(loadableAttributes.timenorm, documentCreationTime)
     doc.parseGeoNorm(loadableAttributes.geonorm)
     // Document ID
     doc.id = filename

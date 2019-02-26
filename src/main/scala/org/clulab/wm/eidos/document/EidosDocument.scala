@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import org.clulab.processors.Document
 import org.clulab.processors.Sentence
 import org.clulab.processors.corenlp.CoreNLPDocument
-import org.clulab.timenorm.TemporalCharbasedParser
+import org.clulab.timenorm.neural.TemporalNeuralParser
 import org.clulab.timenorm.formal.Interval
 import org.clulab.wm.eidos.context.GeoDisambiguateParser
 import org.clulab.wm.eidos.context.GeoPhraseID
@@ -16,55 +16,52 @@ class EidosDocument(sentences: Array[Sentence], text: Option[String]) extends Co
   var times: Option[Array[Seq[TimeInterval]]] = None
   var geolocs: Option[Array[Seq[GeoPhraseID]]] = None
   var dct: Option[DCT] = None
+  var batch_size = 40
+  type IntervalType = ((Int, Int), List[(LocalDateTime, LocalDateTime, Long)])
 
-  protected def parseTime(timenorm: TemporalCharbasedParser): Array[Seq[TimeInterval]] = {
-    sentences.map { sentence =>
-      if (sentence.entities.get.contains("DATE")) {
-        val sentenceText = text
-            .map(text => text.slice(sentence.startOffsets(0), sentence.endOffsets.last))
-            .getOrElse(sentence.getSentenceText)
-        // This might be turned into a class with variable names for documentation.
-        // The offset might be used in the constructor to adjust it once and for all.
-        val intervals: Seq[((Int, Int), List[(LocalDateTime, LocalDateTime, Long)])] = dct
-            .map(dct => timenorm.intervals(timenorm.parse(sentenceText), Some(dct.interval)))
-            .getOrElse(timenorm.intervals(timenorm.parse(sentenceText)))
-        // Sentences use offsets into the document.  Timenorm only knows about the single sentence.
-        // Account for this by adding the offset in time values or subtracting it from word values.
-        val offset = sentence.startOffsets(0)
+  protected def parseTime(timenorm: TemporalNeuralParser, documentCreationTime: Option[String]): Array[Seq[TimeInterval]] = {
+    val textToParse = sentences.map(sentence =>
+      text.map(text => text.slice(sentence.startOffsets.head, sentence.endOffsets.last))
+        .getOrElse(sentence.getSentenceText)).toList
 
-        // Update norms with B-I time expressions
-        sentence.norms.foreach { norms =>
-            norms.indices.foreach { index =>
-              val wordStart = sentence.startOffsets(index) - offset
-              val wordEnd = sentence.endOffsets(index) - offset
-              val matchIndex = intervals.indexWhere { interval =>
-                val timeStart = interval._1._1
-                val timeEnd = interval._1._2
+    val docIntervals = documentCreationTime match {
+      case Some(docTime) =>
+        val parsed = (docTime :: textToParse).sliding(batch_size, batch_size).flatMap(timenorm.parse).toList
+        dct = Some(DCT(timenorm.dct(parsed.head), documentCreationTime.get))
+        timenorm.intervals(parsed.tail, Some(dct.get.interval))
+      case None => timenorm.intervals(textToParse.sliding(batch_size, batch_size).flatMap(timenorm.parse).toList)
+    }
 
-                timeStart <= wordStart && wordEnd <= timeEnd
-              }
-              if (matchIndex >= 0) // word was found inside time expression
-                norms(index) =
-                    if (wordStart == intervals(matchIndex)._1._1) "B-Time" // ff wordStart == timeStart
-                    else "I-Time"
-          }
-        }
-        intervals.map { interval =>
-          TimeInterval((interval._1._1 + offset, interval._1._2 + offset), interval._2, sentenceText.slice(interval._1._1, interval._1._2))
+    sentences.zipWithIndex.map {case (sentence, indexOfSentence) =>
+      val sentenceText = textToParse(indexOfSentence)
+      val intervals: Seq[IntervalType] = docIntervals(indexOfSentence)
+      val offset = sentence.startOffsets.head
+
+      // Update norms with B-I time expressions
+      sentence.norms.foreach { norms =>
+          norms.indices.foreach { index =>
+            val wordStart = sentence.startOffsets(index) - offset
+            val wordEnd = sentence.endOffsets(index) - offset
+            val matchIndex = intervals.indexWhere { interval =>
+              val timeStart = interval._1._1
+              val timeEnd = interval._1._2
+
+              timeStart <= wordStart && wordEnd <= timeEnd
+            }
+            if (matchIndex >= 0) // word was found inside time expression
+              norms(index) =
+                  if (wordStart == intervals(matchIndex)._1._1) "B-Time" // ff wordStart == timeStart
+                  else "I-Time"
         }
       }
-      else
-        Seq.empty[TimeInterval]
+      intervals.map { interval =>
+        TimeInterval((interval._1._1 + offset, interval._1._2 + offset), interval._2, sentenceText.slice(interval._1._1, interval._1._2))
+      }
     }
   }
 
-  def parseDCT(timenorm: Option[TemporalCharbasedParser], documentCreationTime:Option[String]): Unit = {
-    if (timenorm.isDefined && documentCreationTime.isDefined)
-      dct = Some(DCT(timenorm.get.dct(timenorm.get.parse(documentCreationTime.get)), documentCreationTime.get))
-  }
-
-  def parseTime(timenorm: Option[TemporalCharbasedParser]): Unit =
-     times = timenorm.map(parseTime)
+  def parseTime(timenorm: Option[TemporalNeuralParser], documentCreationTime: Option[String]): Unit =
+     times = timenorm.map(parseTime(_, documentCreationTime))
 
   def parseGeoNorm(geoDisambiguateParser: GeoDisambiguateParser): Array[Seq[GeoPhraseID]] = {
     sentences.map { sentence =>

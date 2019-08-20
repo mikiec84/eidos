@@ -89,12 +89,12 @@ class TestGroundCAGtemp extends EnglishTest{
     sourceNode = justSourceGroundings.mkString(" ")
     targetNode = justTargetGroundings.mkString(" ")
 
-    val firstPart = splitLine.slice(0,6)
-    val middlePart = splitLine.slice(6,9)
+    val firstPart = splitLine.slice(0,5)
+    val middlePart = splitLine.slice(6,7)
 
 //    val lastElement = splitLine.last//.indexOf()
 //    println("LAST ELEMENT:\t" + lastElement)
-    val lastPart = splitLine.slice(9,splitLine.length)
+    val lastPart = splitLine.slice(8,splitLine.length)
 
 
     val newLine = firstPart ++ Array(sourceNode) ++ middlePart ++ Array(targetNode) ++ lastPart

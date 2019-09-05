@@ -31,6 +31,7 @@ object ConfidenceAnalysis extends App {
       val factorAscore = lineSplit(1)
       val factorAtext = lineSplit(2)
       val factorAconfidence = lineSplit(3).split(",").last.split("\\)").head // funky formatting
+      // TODO: decide definitively which confidence score to use; only rank 1, or use rank 2 if score=2, etc
 
       val factorBscore = lineSplit(8)
       val factorBtext = lineSplit(9)

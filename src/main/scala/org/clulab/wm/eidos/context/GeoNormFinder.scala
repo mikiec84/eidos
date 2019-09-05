@@ -27,7 +27,7 @@ object GeoNormFinder {
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
   class CacheManager(config: Config) {
-    lazy val geoNamesIndexPath: Path = Paths.get(config[String]("geoNamesIndexPath"))
+    val geoNamesIndexPath: Path = Paths.get(config[String]("geoNamesIndexPath")).toAbsolutePath.normalize
     protected lazy val segmentsPath: Path = geoNamesIndexPath.resolve("segments_1")
     protected lazy val zipPath: Path = geoNamesIndexPath.resolve("geonames-index.zip")
 
@@ -117,6 +117,9 @@ object GeoNormFinder {
 }
 
 class GeoNormFinder(extractor: GeoLocationExtractor, normalizer: GeoLocationNormalizer) extends Finder {
+
+  def getGeoPhraseIDs(odinMentions: Seq[Mention], sentences: Array[Sentence]): Array[Seq[GeoPhraseID]] =
+      GeoNormFinder.getGeoPhraseIDs(odinMentions, sentences)
 
   def find(doc: Document, initialState: State): Seq[Mention] = {
     val sentenceLocations = extractor(doc.sentences.map(_.raw))

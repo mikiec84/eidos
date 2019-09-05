@@ -10,9 +10,9 @@ import org.clulab.odin.{Mention, State, TextBoundMention}
 import org.clulab.processors.Document
 import org.clulab.processors.Sentence
 import org.clulab.struct.{Interval => TextInterval}
-import org.clulab.timenorm.formal._
-import org.clulab.timenorm.formal.{Interval => TimExInterval, Intervals => TimExIntervals}
-import org.clulab.timenorm.neural.TemporalNeuralParser
+import org.clulab.timenorm.scate._
+import org.clulab.timenorm.scate.{Interval => TimExInterval, Intervals => TimExIntervals}
+import org.clulab.timenorm.scate.TemporalNeuralParser
 import org.clulab.wm.eidos.attachments.Time
 import org.clulab.wm.eidos.document.DctDocumentAttachment
 import org.clulab.wm.eidos.extraction.Finder
@@ -82,6 +82,9 @@ object TimeNormFinder {
 class TimeNormFinder(parser: TemporalNeuralParser, timeRegexes: Seq[Regex]) extends Finder {
   private val CONTEXT_WINDOW_SIZE = 20
   private val BATCH_SIZE = 40
+
+  def getTimExs(odinMentions: Seq[Mention], sentences: Array[Sentence]): Array[Seq[TimEx]] =
+      TimeNormFinder.getTimExs(odinMentions, sentences)
 
   def parseBatch(text: String, spans: Array[(Int, Int)],
                  textCreationTime: TimExInterval = UnknownInterval()): Array[Array[TimeExpression]] = {

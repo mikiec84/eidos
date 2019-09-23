@@ -1,5 +1,8 @@
 package org.clulab.wm.eidos.context
 
+import java.io.File
+import java.net.JarURLConnection
+import java.net.URI
 import java.net.URL
 import java.nio.file.{Files, Path, Paths}
 import java.util.IdentityHashMap
@@ -15,6 +18,7 @@ import org.clulab.wm.eidos.attachments.Location
 import org.clulab.wm.eidos.extraction.Finder
 import org.clulab.wm.eidos.mentions.EidosMention
 import org.clulab.wm.eidos.utils.FileUtils
+import org.clulab.wm.eidos.utils.StringUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -27,52 +31,87 @@ object GeoNormFinder {
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
   class CacheManager(config: Config) {
-    val geoNamesIndexPath: Path = Paths.get(config[String]("geoNamesIndexPath")).toAbsolutePath.normalize
-    protected lazy val segmentsPath: Path = geoNamesIndexPath.resolve("segments_1")
-    protected lazy val zipPath: Path = geoNamesIndexPath.resolve("geonames-index.zip")
+    val resourceSetting: String = config[String]("resource")
+    val filesystemSetting: String = config[String]("filesystem")
+    val sentinelSetting: String = config[String]("sentinel")
+
+    val cacheFilesystemPath = Paths.get(filesystemSetting)
+    val cacheSentinelPath = cacheFilesystemPath.resolve(sentinelSetting)
+    val filesystemPath = cacheFilesystemPath.toAbsolutePath.normalize
 
     // The default is not to replace any files on a machine that is simply running Eidos.
     // This can be overruled by programs that are managing the cache.
-    def mkCache(replaceOnUnzip: Boolean = false): Unit = {
-      // copy the zip file to the local machine
-      val geoNamesIndexURL: URL = config[URL]("geoNamesIndexURL")
-      logger.info(s"Downloading the GeoNames index from $geoNamesIndexURL.")
-      Files.createDirectories(geoNamesIndexPath)
-      Files.copy(geoNamesIndexURL.openStream, zipPath)
+    def mkCache(replaceOnUnzip: Boolean = false): Path = {
+      val urlOpt = Option(this.getClass.getResource(resourceSetting))
+      val url = urlOpt.getOrElse {
+        throw new RuntimeException(s"ERROR: cannot locate the model resource $resourceSetting!")
+      }
+      val protocol = url.getProtocol
 
-      // unzip the zip file
-      logger.info(s"Extracting the GeoNames index to $geoNamesIndexPath.")
-      FileUtils.unzip(zipPath, geoNamesIndexPath, replace = replaceOnUnzip)
-      Files.delete(zipPath)
+      if (protocol == "file") {
+        val uri = new URI(url.toString)
+        val alternateFilesystemPath = Paths.get(uri).toAbsolutePath.normalize
 
-      if (!isCached)
-        throw new RuntimeException(s"The caching operation was apparently unsuccessful.")
+        alternateFilesystemPath
+      }
+      else if (protocol == "jar") {
+        // The resource has been jarred, and must be extracted with a ZipModelLoader.
+        val jarUrl = url.openConnection().asInstanceOf[JarURLConnection].getJarFileURL
+        val protocol2 = jarUrl.getProtocol
+        assert(protocol2 == "file")
+        val uri = new URI(jarUrl.toString)
+        // This converts both percent encoded characters and file separators.
+        val nativeJarFileName = new File(uri).getPath
+
+        logger.info(s"Extracting the GeoNames index to $filesystemPath.")
+        FileUtils.unzip(Paths.get(nativeJarFileName), filesystemPath, replace = replaceOnUnzip)
+        getCache.getOrElse {
+          throw new RuntimeException(s"The caching operation was apparently unsuccessful.")
+        }
+      }
+      else
+        throw new RuntimeException(s"Unknown protocol for resource at $url.")
     }
 
     def rmCache(): Unit = {
-      Files.deleteIfExists(segmentsPath)
-      Files.deleteIfExists(zipPath)
+      Files.deleteIfExists(filesystemPath)
     }
 
-    def isCached: Boolean = {
-      val cached = Files.exists(segmentsPath)
+    def getCache: Option[Path] = {
+      val isFilesystemFile = Files.exists(cacheSentinelPath)
 
-      if (cached)
-        logger.info(s"GeoNames index found at $geoNamesIndexPath.")
-      else
-        logger.info(s"No GeoNames index at $geoNamesIndexPath.")
-      cached
+      if (isFilesystemFile) {
+        logger.info(s"GeoNames index found at $filesystemPath.")
+        Some(filesystemPath)
+      }
+      else {
+        val urlOpt = Option(this.getClass.getResource(resourceSetting + "/" + sentinelSetting))
+        val protocolOpt = urlOpt.map(_.getProtocol)
+        val isResourceFile = protocolOpt.exists(_ == "file")
+
+        if (isResourceFile) {
+          val uri = new URI(this.getClass.getResource(resourceSetting).toString)
+          val alternateFilesystemPath = Paths.get(uri).toAbsolutePath.normalize
+
+          logger.info(s"GeoNames index found at $alternateFilesystemPath.")
+          Some(alternateFilesystemPath)
+        }
+        else {
+          logger.info(s"No GeoNames index as resource at $resourceSetting or as file at $filesystemPath.")
+          None
+        }
+      }
     }
   }
 
   def fromConfig(config: Config): GeoNormFinder = {
     val cacheManager = new CacheManager(config)
-    if (!cacheManager.isCached)
-      cacheManager.mkCache()
+    val oldCacheOpt = cacheManager.getCache
+    val newCache = oldCacheOpt.getOrElse(cacheManager.mkCache())
 
     new GeoNormFinder(
       new GeoLocationExtractor(),
-      new GeoLocationNormalizer(new GeoNamesIndex(cacheManager.geoNamesIndexPath)))
+      new GeoLocationNormalizer(new GeoNamesIndex(newCache)))
   }
 
   def getGeoPhraseIDs(odinMentions: Seq[Mention]): Array[GeoPhraseID]= {

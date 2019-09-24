@@ -20,9 +20,12 @@ object CacheOntologies extends App {
 
   {
     val cacheManager = new GeoNormFinder.CacheManager(config[Config]("geonorm"))
+    val cacheOpt = cacheManager.getCache
 
-    cacheManager.rmCache()
-    cacheManager.mkCache(replaceOnUnzip = true)
+    if (cacheOpt.isDefined)
+      println("GeoNorm cache is already available!")
+    else
+      cacheManager.mkCache(replaceOnUnzip = true)
   }
 
   val reader = new EidosSystem(config)

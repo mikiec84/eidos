@@ -55,7 +55,6 @@ object GeoNormFinder {
         alternateFilesystemPath
       }
       else if (protocol == "jar") {
-        // The resource has been jarred, and must be extracted with a ZipModelLoader.
         val jarUrl = url.openConnection().asInstanceOf[JarURLConnection].getJarFileURL
         val protocol2 = jarUrl.getProtocol
         assert(protocol2 == "file")
@@ -64,17 +63,15 @@ object GeoNormFinder {
         val nativeJarFileName = new File(uri).getPath
 
         logger.info(s"Extracting the GeoNames index to $filesystemPath.")
-        FileUtils.unzip(Paths.get(nativeJarFileName), filesystemPath, replace = replaceOnUnzip)
+        // Remove the leading slash and put on end because that's how they come out of the jar file.
+        val prefix = resourceSetting.drop(1) + "/"
+        FileUtils.unzip(Paths.get(nativeJarFileName), filesystemPath, prefix, replace = replaceOnUnzip)
         getCache.getOrElse {
           throw new RuntimeException(s"The caching operation was apparently unsuccessful.")
         }
       }
       else
         throw new RuntimeException(s"Unknown protocol for resource at $url.")
-    }
-
-    def rmCache(): Unit = {
-      Files.deleteIfExists(filesystemPath)
     }
 
     def getCache: Option[Path] = {

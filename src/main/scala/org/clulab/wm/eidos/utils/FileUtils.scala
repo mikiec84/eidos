@@ -184,10 +184,10 @@ object FileUtils {
   def newObjectInputStream(filename: String): ObjectInputStream =
       new ObjectInputStream(newBufferedInputStream(filename))
 
-  def unzip(zipPath: Path, outputPath: Path, replace: Boolean = false): Unit = {
+  def unzip(zipPath: Path, outputPath: Path, prefix: String = "", replace: Boolean = false): Unit = {
     new ZipFile(zipPath.toFile).autoClose { zipFile =>
-      for (entry <- zipFile.entries.asScala) {
-        val path = outputPath.resolve(entry.getName)
+      for (entry <- zipFile.entries.asScala if entry.getName.startsWith(prefix)) {
+        val path = outputPath.resolve(entry.getName.drop(prefix.length))
         if (entry.isDirectory) {
           Files.createDirectories(path)
         } else {

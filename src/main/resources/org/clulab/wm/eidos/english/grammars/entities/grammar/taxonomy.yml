@@ -1,5 +1,6 @@
 - Entity:
   - Concept
+  - Location
 # references, tables, etc.
 - Avoid:
   - Avoid-Strict

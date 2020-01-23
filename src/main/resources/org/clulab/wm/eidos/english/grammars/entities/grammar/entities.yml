@@ -1,6 +1,7 @@
 #taxonomy: org/clulab/wm/eidos/english/grammars/entities/grammar/taxonomy.yml
 
-#rules:
+rules:
+
   - name: simple-np
     label: Concept
     priority: 1
@@ -20,3 +21,4 @@
       [chunk='B-VP' & !mention=Avoid]? [chunk='I-VP' & !mention=Avoid]+
       |
       [chunk='B-VP' & !mention=Avoid]
+

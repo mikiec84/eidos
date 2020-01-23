@@ -35,7 +35,20 @@
 #    action: backoffGeonorm
     type: token
     pattern: |
-      [entity="LOCATION" & !norm="LOC"] [entity="LOCATION" & !norm="LOC" & !tag=/-[LR]RB-/]*
+      [entity = "LOCATION"]
+     # [entity="LOCATION" & !norm="LOC"] [entity="LOCATION" & !norm="LOC" & !tag=/-[LR]RB-/]*
+
+    #a toy rule
+  - name: location-backoff1
+      # backoff to Stanford location
+    priority: 1
+    example: "was reported through Gangura and Nabiapai"
+    label: Location
+      #    action: backoffGeonorm
+    type: token
+    pattern: |
+        [word = 'Gangura']
+
 
   - name: location-backoff-expand
     # where the first part of a complex NNP is found, expand to the rest of the NNP chunk
@@ -67,35 +80,35 @@
     pattern: |
       (?<=[entity="LOCATION"] [word="and"]) [tag=/^NNP/ & !word=/(KIs?)|DRC/ & !norm="LOC" & !entity="LOCATION"]+
 
-  - name: time-stanford
-    # backoff to Stanford time
-    priority: ${ rulepriority }
-    example: "reaching record levels in July."
-    label: Time
-    type: token
-    pattern: |
-      [entity="DATE"] [entity="DATE"]*
-
-
-  - name: number-stanford
-      # backoff to Stanford time
-    priority: ${ rulepriority }
-    example: "bringing the total who arrived to 68,858."
-    label: Concept
-    type: token
-    pattern: |
-        [entity="NUMBER"]
-#      |
-#      [entity="DURATION"] [entity="DURATION"]*
-
-  - name: time-expand
-      # backoff to Stanford time
-    priority: ${ rulepriority }
-    example: "bringing the total who arrived to 68,858."
-    label: Time
-    type: token
-    pattern: |
-        [norm=/.-Time/]
-
-      # todo: same for time
-      # make the other temporal attachment yml rules use the mention=X syntax
+#  - name: time-stanford
+#    # backoff to Stanford time
+#    priority: ${ rulepriority }
+#    example: "reaching record levels in July."
+#    label: Time
+#    type: token
+#    pattern: |
+#      [entity="DATE"] [entity="DATE"]*
+#
+#
+#  - name: number-stanford
+#      # backoff to Stanford time
+#    priority: ${ rulepriority }
+#    example: "bringing the total who arrived to 68,858."
+#    label: Concept
+#    type: token
+#    pattern: |
+#        [entity="NUMBER"]
+##      |
+##      [entity="DURATION"] [entity="DURATION"]*
+#
+#  - name: time-expand
+#      # backoff to Stanford time
+#    priority: ${ rulepriority }
+#    example: "bringing the total who arrived to 68,858."
+#    label: Time
+#    type: token
+#    pattern: |
+#        [norm=/.-Time/]
+#
+#      # todo: same for time
+#      # make the other temporal attachment yml rules use the mention=X syntax

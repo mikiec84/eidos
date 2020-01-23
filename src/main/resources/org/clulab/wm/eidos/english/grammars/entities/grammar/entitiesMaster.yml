@@ -1,12 +1,19 @@
 taxonomy: org/clulab/wm/eidos/english/grammars/entities/grammar/taxonomy.yml
 
 rules:
-  # Concepts
+  #Entities are found with EntityFinder! Not extracted here!
+
+  #Events
+
+  # Higher priority domain-specific events
   - import: org/clulab/wm/eidos/english/grammars/entities/grammar/entities.yml
     vars:
       rulepriority: "1"
 
-  # Locations
-#  - import: org/clulab/wm/eidos/english/grammars/entities/grammar/context.yml
-#    vars:
-#      rulepriority: "2"
+
+
+
+#   Locations
+  - import: org/clulab/wm/eidos/english/grammars/entities/grammar/context.yml
+    vars:
+      rulepriority: "2"

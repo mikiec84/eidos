@@ -125,16 +125,13 @@ object RuleBasedEntityFinder {
   val DEFAULT_MAX_LENGTH = 50 // maximum length (in tokens) for an entity // FIXME read in?
 
   def fromConfig(config: Config): RuleBasedEntityFinder = {
-    println("00000")
     val entityRulesPath = config[String]("ruleBasedEntityFinder.entityRulesPath")
     val entityRules = FileUtils.getTextFromResource(entityRulesPath)
     val entityEngine = ExtractorEngine(entityRules)
-    println("AAAAA")
 
     val avoidRulesPath = config[String]("ruleBasedEntityFinder.avoidRulesPath")
     val avoidRules = FileUtils.getTextFromResource(avoidRulesPath)
     val avoidEngine = ExtractorEngine(avoidRules)
-    println("BBBBB")
 
     val expanderConfig = config.get[Config]("ruleBasedEntityFinder.expander")
     val expander: Option[Expander] = expanderConfig.map(Expander.fromConfig)

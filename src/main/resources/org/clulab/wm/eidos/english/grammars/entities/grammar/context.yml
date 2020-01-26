@@ -35,19 +35,8 @@
 #    action: backoffGeonorm
     type: token
     pattern: |
-      [entity = "LOCATION"]
-     # [entity="LOCATION" & !norm="LOC"] [entity="LOCATION" & !norm="LOC" & !tag=/-[LR]RB-/]*
-
-    #a toy rule
-  - name: location-backoff1
-      # backoff to Stanford location
-    priority: 1
-    example: "was reported through Gangura and Nabiapai"
-    label: Location
-      #    action: backoffGeonorm
-    type: token
-    pattern: |
-        [word = 'Gangura']
+     # [entity = "LOCATION"]
+      [entity="LOCATION" & !norm="LOC"] [entity="LOCATION" & !norm="LOC" & !tag=/-[LR]RB-/]*
 
 
   - name: location-backoff-expand

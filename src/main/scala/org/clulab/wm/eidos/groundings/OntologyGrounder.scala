@@ -187,6 +187,8 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         getModifierMentions(headText, mention.odinMention)
       }.getOrElse(Seq.empty)
       val allMentions = mentionHeadOpt.toSeq ++ modifierMentions
+      println("all mentions")
+      println(allMentions)
       // Get all groundings for each branch.
       val allSimiliarities = Map(
         CompositionalGrounder.PROPERTY ->

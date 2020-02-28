@@ -164,6 +164,11 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
   }
 
   override def groundOntology(mention: EidosMention, topN: Option[Int] = None, threshold: Option[Float] = None): Seq[OntologyGrounding] = {
+    groundOntology(mention, topN, threshold, 0)
+
+  }
+
+  def groundOntology(mention: EidosMention, topN: Option[Int] = None, threshold: Option[Float] = None, windowSize:Int = 0): Seq[OntologyGrounding] = {
     // Do nothing to non-groundableType mentions
     if (!EidosOntologyGrounder.groundableType(mention))
       Seq(newOntologyGrounding())
@@ -175,19 +180,21 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       val mentionHeadOpt = syntacticHeadOpt.map ( syntacticHead =>
         new TextBoundMention(
           Seq("Mention_head"),
-          tokenInterval = Interval(syntacticHead),
+          // TODO: this is not safe. Later check the left and right bound.
+          tokenInterval = Interval(syntacticHead-windowSize, syntacticHead+windowSize),
           sentence = mention.odinMention.sentence,
           document = mention.odinMention.document,
           keep = mention.odinMention.keep,
           foundBy = mention.odinMention.foundBy
         )
       )
+
       val headTextOpt = mentionHeadOpt.map(_.text)
       val modifierMentions = headTextOpt.map { headText =>
         getModifierMentions(headText, mention.odinMention)
       }.getOrElse(Seq.empty)
       val allMentions = mentionHeadOpt.toSeq ++ modifierMentions
-      println("all mentions")
+      println("all mentions in function")
       println(allMentions.head.text)
       // Get all groundings for each branch.
       val allSimiliarities = Map(

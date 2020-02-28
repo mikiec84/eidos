@@ -24,6 +24,8 @@ class TestGrounding2 extends EnglishTest {
         (Seq[EidosMention], Seq[EidosMention])
 
     def allGroundingNames(mention: EidosMention, topN: Option[Int] = groundTopN, threshold: Option[Float] = threshold): Seq[String]
+    def allGroundingNames(mention: EidosMention, topN: Option[Int] = groundTopN, threshold: Option[Float] = threshold, windowSize:Int = 0): Seq[String]
+
   }
 
   object CompositionalGroundingTextTester {
@@ -47,6 +49,8 @@ class TestGrounding2 extends EnglishTest {
         (Seq[EidosMention], Seq[EidosMention]) = (Seq.empty, Seq.empty)
 
     def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float]): Seq[String] = Seq.empty
+    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): Seq[String] = Seq.empty
+
   }
 
   class RealCompositionalGroundingTextTester(name: String, ontologyGrounder: OntologyGrounder) extends CompositionalGroundingTextTester {
@@ -65,8 +69,25 @@ class TestGrounding2 extends EnglishTest {
       groundings
     }
 
+    def groundings(mention: EidosMention, topN: Option[Int] = groundTopN, threshold: Option[Float] = threshold, windowSize:Int = 0): OntologyGroundings = {
+      val ontologyGroundings: Seq[OntologyGrounding] =
+        if (ontologyGrounder.isInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder]){
+          ontologyGrounder.asInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder].groundOntology(mention, topN = groundTopN, threshold = threshold, windowSize = windowSize)
+        }
+        else{
+          ontologyGrounder.groundOntology(mention, topN = groundTopN, threshold = threshold)
+        }
+      val groundings = ontologyGroundings.map { ontologyGrounding =>
+        val newName = name + ontologyGrounding.branch.map { branch => "/" + branch }.getOrElse("")
+
+        newName -> ontologyGrounding
+      }.toMap
+
+      groundings
+    }
+
     protected def topGroundingValue(mention: EidosMention, componentName: String): Float = {
-      val allGroundings = groundings(mention)
+      val allGroundings = groundings(mention, groundTopN, threshold)
       val topGrounding = allGroundings(name + "/" + componentName).headOption.get._2
       topGrounding
     }
@@ -86,9 +107,20 @@ class TestGrounding2 extends EnglishTest {
 
       names
     }
+
+    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int = 0): Seq[String] = {
+      val allGroundings = groundings(mention, topN, threshold, windowSize)
+      val names = allGroundings.values.flatMap { ontologyGrounding =>
+        ontologyGrounding.grounding.map { grounding => grounding._1.name }
+      }.toSeq
+
+      names
+
+    }
+
     // to get both name AND score of groundings
     def allGroundingInfo(mention: EidosMention): Seq[(String,Float)] = {
-      val allGroundings = groundings(mention)
+      val allGroundings = groundings(mention, groundTopN, threshold)
       val names = allGroundings.values.flatMap { ontologyGrounding =>
         ontologyGrounding.grounding.map { grounding => (grounding._1.name, grounding._2) }
       }.toSeq
@@ -143,8 +175,10 @@ class TestGrounding2 extends EnglishTest {
       passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
         if (tester.active) {
           println("\t", causeMentions.head.odinMention.text)
-          println("\t", tester.allGroundingNames(causeMentions.head))
-          tester.allGroundingNames(causeMentions.head).contains(
+
+          val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
+          println("\t", matchedNodes)
+          matchedNodes.contains(
             "concept/causal_factor/entity/person_and_group/humanitarian_workers"
           ) should be(true)
         }

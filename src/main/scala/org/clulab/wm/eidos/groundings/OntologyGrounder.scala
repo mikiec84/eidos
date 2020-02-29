@@ -164,7 +164,7 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
   }
 
 
-  def groundOntology(mention: EidosMention, topN: Option[Int] = None, threshold: Option[Float] = None, windowSize:Int = 0): Seq[OntologyGrounding] = {
+  def groundOntology(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): Seq[OntologyGrounding] = {
     // Do nothing to non-groundableType mentions
     if (!EidosOntologyGrounder.groundableType(mention))
       Seq(newOntologyGrounding())

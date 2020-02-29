@@ -69,7 +69,7 @@ class TestGrounding2 extends EnglishTest {
       groundings
     }
 
-    def groundings(mention: EidosMention, topN: Option[Int] = groundTopN, threshold: Option[Float] = threshold, windowSize:Int = 0): OntologyGroundings = {
+    def groundings(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): OntologyGroundings = {
       val ontologyGroundings: Seq[OntologyGrounding] =
         if (ontologyGrounder.isInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder]){
           ontologyGrounder.asInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder].groundOntology(mention, topN = groundTopN, threshold = threshold, windowSize = windowSize)
@@ -108,7 +108,7 @@ class TestGrounding2 extends EnglishTest {
       names
     }
 
-    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int = 0): Seq[String] = {
+    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): Seq[String] = {
       val allGroundings = groundings(mention, topN, threshold, windowSize)
       val names = allGroundings.values.flatMap { ontologyGrounding =>
         ontologyGrounding.grounding.map { grounding => grounding._1.name }

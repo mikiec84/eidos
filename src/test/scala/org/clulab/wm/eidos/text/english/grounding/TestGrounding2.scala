@@ -24,7 +24,7 @@ class TestGrounding2 extends EnglishTest {
         (Seq[EidosMention], Seq[EidosMention])
 
     def allGroundingNames(mention: EidosMention, topN: Option[Int] = groundTopN, threshold: Option[Float] = threshold): Seq[String]
-    def allGroundingNames(mention: EidosMention, topN: Option[Int] = groundTopN, threshold: Option[Float] = threshold, windowSize:Int = 0): Seq[String]
+    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): Seq[String]
 
   }
 

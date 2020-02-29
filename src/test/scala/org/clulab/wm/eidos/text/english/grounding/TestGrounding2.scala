@@ -164,8 +164,8 @@ class TestGrounding2 extends EnglishTest {
 
       val text = "Conflict and widespread insecurity impact the humanitarian situation negatively and hamper humanitarian organizations from carrying out their activities in the deep field."
 
-      val causeStart = scala.math.max(0, 4-windowSize)
-      val causeEnd = scala.math.min(21, 5+windowSize)
+      val causeStart = scala.math.max(0, 4)
+      val causeEnd = scala.math.min(21, 5)
 
       //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
       val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(causeStart, causeEnd)), List(Interval(causeStart, causeEnd)))

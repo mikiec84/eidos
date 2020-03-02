@@ -204,6 +204,7 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
             allMentions.flatMap(m => w2v.calculateSimilarities(Array(m.text), conceptEmbeddingsSeq(CompositionalGrounder.CONCEPT)))
       )
       val effectiveThreshold = threshold.getOrElse(CompositionalGrounder.defaultThreshold)
+      println("\teffective threshold:", effectiveThreshold)
       val effectiveTopN = topN.getOrElse(CompositionalGrounder.defaultGroundTopN)
       val goodGroundings = allSimiliarities.map { case(name, similarities) =>
         val goodSimilarities = similarities

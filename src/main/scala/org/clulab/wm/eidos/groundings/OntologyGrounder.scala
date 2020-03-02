@@ -199,9 +199,9 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         CompositionalGrounder.PROPERTY ->
             allMentions.flatMap(m => nodesPatternMatched(m.text, conceptPatternsSeq(CompositionalGrounder.PROPERTY))),
         CompositionalGrounder.PROCESS ->
-            allMentions.flatMap(m => w2v.calculateSimilarities(Array(m.text), conceptEmbeddingsSeq(CompositionalGrounder.PROCESS))),
+            allMentions.flatMap(m => w2v.calculateSimilarities(m.text.split(" "), conceptEmbeddingsSeq(CompositionalGrounder.PROCESS))),
         CompositionalGrounder.CONCEPT ->
-            allMentions.flatMap(m => w2v.calculateSimilarities(Array(m.text), conceptEmbeddingsSeq(CompositionalGrounder.CONCEPT)))
+            allMentions.flatMap(m => w2v.calculateSimilarities(m.text.split(" "), conceptEmbeddingsSeq(CompositionalGrounder.CONCEPT)))
       )
       val effectiveThreshold = threshold.getOrElse(CompositionalGrounder.defaultThreshold)
       println("\teffective threshold:", effectiveThreshold)

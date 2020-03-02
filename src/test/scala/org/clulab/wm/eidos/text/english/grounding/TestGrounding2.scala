@@ -72,7 +72,6 @@ class TestGrounding2 extends EnglishTest {
     def groundings(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): OntologyGroundings = {
       val ontologyGroundings: Seq[OntologyGrounding] =
         if (ontologyGrounder.isInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder]){
-          println("\tWe are using the correct grounding function!")
           ontologyGrounder.asInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder].groundOntology(mention, topN = groundTopN, threshold = threshold, windowSize = windowSize)
         }
         else{
@@ -120,7 +119,11 @@ class TestGrounding2 extends EnglishTest {
         ontologyGrounding.grounding.map { grounding => (grounding._1.name, grounding._2 )}
       }.toSeq
 
-      println("\tname score tuple:", nameScoreTuple)
+      println("\tmatched nodes:")
+      for (nameScore <- nameScoreTuple){
+        println("\t\t", nameScore._1, nameScore._2)
+
+      }
 
       names
 
@@ -184,7 +187,7 @@ class TestGrounding2 extends EnglishTest {
           println("============================")
           println("window size:", windowSize)
 
-          println("\t", causeMentions.head.odinMention.text)
+          println("\toriginal mention:", causeMentions.head.odinMention.text)
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
           matchedNodes.contains(

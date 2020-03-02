@@ -173,6 +173,7 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       // Get the syntactic head of the mention.
       val syntacticHeadOpt = mention.odinMention.synHead
       // Make a new mention that's just the syntactic head of the original mention.
+      println("syntactic head opt:", syntacticHeadOpt)
       val mentionHeadOpt = syntacticHeadOpt.map ( syntacticHead =>
         new TextBoundMention(
           Seq("Mention_head"),

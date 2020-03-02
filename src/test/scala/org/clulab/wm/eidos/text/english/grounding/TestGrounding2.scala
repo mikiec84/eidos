@@ -170,7 +170,7 @@ class TestGrounding2 extends EnglishTest {
 
       //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
       println("start annotation")
-      val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(causeStart, causeEnd)), List(Interval(causeStart, causeEnd)))
+      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(4, 5)), Seq(Interval(4, 5)))
       println("finished annotation")
 
       val causeMentions = eidosMentions._1

@@ -121,7 +121,7 @@ class TestGrounding2 extends EnglishTest {
 
       println("\tmatched nodes:")
       for (nameScore <- nameScoreTuple){
-        println("\t\t", nameScore._1, nameScore._2)
+        println("\t\t%s, %f", nameScore._1, nameScore._2)
 
       }
 
@@ -185,9 +185,9 @@ class TestGrounding2 extends EnglishTest {
       passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
         if (tester.active) {
           println("============================")
-          println("window size:", windowSize)
+          println("window size: %d", windowSize)
 
-          println("\toriginal mention:", causeMentions.head.odinMention.text)
+          println("\toriginal mention:%s", causeMentions.head.odinMention.text)
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
           matchedNodes.contains(
@@ -216,8 +216,9 @@ class TestGrounding2 extends EnglishTest {
       passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
         if (tester.active) {
           println("============================")
-          println("window size:", windowSize)
-          println("\t", causeMentions.head.odinMention.text)
+          println("window size: %d", windowSize)
+
+          println("\toriginal mention:%s", causeMentions.head.odinMention.text)
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
           matchedNodes.contains(

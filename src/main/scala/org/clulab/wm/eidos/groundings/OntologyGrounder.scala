@@ -190,7 +190,7 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         getModifierMentions(headText, mention.odinMention)
       }.getOrElse(Seq.empty)
       val allMentions = mentionHeadOpt.toSeq ++ modifierMentions
-      println("\tmention text for matching:", allMentions.head.text)
+      println("\tmention text for matching:%s", {allMentions.head.text})
       // Get all groundings for each branch.
       val allSimiliarities = Map(
         CompositionalGrounder.PROPERTY ->
@@ -201,7 +201,7 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
             allMentions.flatMap(m => w2v.calculateSimilarities(m.text.split(" "), conceptEmbeddingsSeq(CompositionalGrounder.CONCEPT)))
       )
       val effectiveThreshold = threshold.getOrElse(CompositionalGrounder.defaultThreshold)
-      println("\teffective threshold:", effectiveThreshold)
+      println("\teffective threshold:%s", {effectiveThreshold})
       val effectiveTopN = topN.getOrElse(CompositionalGrounder.defaultGroundTopN)
       val goodGroundings = allSimiliarities.map { case(name, similarities) =>
         val goodSimilarities = similarities

@@ -115,12 +115,12 @@ class TestGrounding2 extends EnglishTest {
         ontologyGrounding.grounding.map { grounding => grounding._1.name }
       }.toSeq
 
-      val scores = allGroundings.values.flatMap { ontologyGrounding =>
-        ontologyGrounding.grounding.map { grounding => grounding._2 }
+
+      val nameScoreTuple = allGroundings.values.flatMap { ontologyGrounding =>
+        ontologyGrounding.grounding.map { grounding => (grounding._1.name, grounding._2 )}
       }.toSeq
 
-      println("\tgroundings:", names)
-      println("\tscores:", scores)
+      println("\tname score tuple:", nameScoreTuple)
 
       names
 

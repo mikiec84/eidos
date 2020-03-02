@@ -16,7 +16,7 @@ class TestGrounding2 extends EnglishTest {
 
   abstract class CompositionalGroundingTextTester {
     val groundTopN: Option[Int] = Option(5)
-    val threshold: Option[Float] = Option(0.0f)
+    val threshold: Option[Float] = Option(0.5f)
     val active: Boolean
 
     def fakeAnnotatedDoc(text: String, causeIntervals: Seq[Interval], effectIntervals: Seq[Interval],
@@ -188,7 +188,7 @@ class TestGrounding2 extends EnglishTest {
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
           matchedNodes.contains(
-            "concept/causal_factor/social_and_political/political/political_instability"
+            "wm_compositional/concept/causal_factor/social_and_political/political/political_instability"
           ) should be(true)
         }
       }
@@ -218,7 +218,7 @@ class TestGrounding2 extends EnglishTest {
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
           matchedNodes.contains(
-            "concept/causal_factor/infrastructure_access/road"
+            "wm_compositional/concept/causal_factor/infrastructure_access/road"
           ) should be(true)
         }
       }

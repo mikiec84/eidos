@@ -16,7 +16,7 @@ class TestGrounding2 extends EnglishTest {
 
   abstract class CompositionalGroundingTextTester {
     val groundTopN: Option[Int] = Option(5)
-    val threshold: Option[Float] = Option(0.5f)
+    val threshold: Option[Float] = Option(0.3f)
     val active: Boolean
 
     def fakeAnnotatedDoc(text: String, causeIntervals: Seq[Interval], effectIntervals: Seq[Interval],
@@ -115,6 +115,13 @@ class TestGrounding2 extends EnglishTest {
         ontologyGrounding.grounding.map { grounding => grounding._1.name }
       }.toSeq
 
+      val scores = allGroundings.values.flatMap { ontologyGrounding =>
+        ontologyGrounding.grounding.map { grounding => grounding._2 }
+      }.toSeq
+
+      println("\tgroundings:", names)
+      println("\tscores:", scores)
+
       names
 
     }
@@ -158,7 +165,6 @@ class TestGrounding2 extends EnglishTest {
   val tester: CompositionalGroundingTextTester = CompositionalGroundingTextTester("wm_compositional")
 
   {
-    println("============================")
     for (windowSize <- 0 to 4){
 
       behavior of "Grounding 1 Dup Window Size "+windowSize.toString
@@ -175,10 +181,11 @@ class TestGrounding2 extends EnglishTest {
 
       passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
         if (tester.active) {
+          println("============================")
+
           println("\t", causeMentions.head.odinMention.text)
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
-          println("\t", matchedNodes)
           matchedNodes.contains(
             "concept/causal_factor/social_and_political/political/political_instability"
           ) should be(true)
@@ -188,7 +195,6 @@ class TestGrounding2 extends EnglishTest {
   }
 
   {
-    println("============================")
     for (windowSize <- 0 to 3){
 
       behavior of "Grounding 2 Dup Window Size "+windowSize.toString
@@ -205,10 +211,11 @@ class TestGrounding2 extends EnglishTest {
 
       passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
         if (tester.active) {
+          println("============================")
+
           println("\t", causeMentions.head.odinMention.text)
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
-          println("\t", matchedNodes)
           matchedNodes.contains(
             "concept/causal_factor/infrastructure_access/road"
           ) should be(true)

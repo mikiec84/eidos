@@ -178,7 +178,7 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         new TextBoundMention(
           Seq("Mention_head"),
           // TODO: this is not safe. Later check the left and right bound.
-          tokenInterval = Interval(syntacticHead-windowSize, syntacticHead+windowSize),
+          tokenInterval = Interval(syntacticHead-windowSize, syntacticHead+1+windowSize),
           sentence = mention.odinMention.sentence,
           document = mention.odinMention.document,
           keep = mention.odinMention.keep,

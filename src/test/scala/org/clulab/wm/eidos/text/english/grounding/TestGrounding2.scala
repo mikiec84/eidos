@@ -72,6 +72,7 @@ class TestGrounding2 extends EnglishTest {
     def groundings(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): OntologyGroundings = {
       val ontologyGroundings: Seq[OntologyGrounding] =
         if (ontologyGrounder.isInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder]){
+          println("We are using the correct grounding function!")
           ontologyGrounder.asInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder].groundOntology(mention, topN = groundTopN, threshold = threshold, windowSize = windowSize)
         }
         else{
@@ -164,11 +165,13 @@ class TestGrounding2 extends EnglishTest {
 
       val text = "Conflict and widespread insecurity impact the humanitarian situation negatively and hamper humanitarian organizations from carrying out their activities in the deep field."
 
-      val causeStart = scala.math.max(0, 4)
-      val causeEnd = scala.math.min(21, 5)
+      val causeStart = 4
+      val causeEnd = 5
 
       //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
+      println("start annotation")
       val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(causeStart, causeEnd)), List(Interval(causeStart, causeEnd)))
+      println("finished annotation")
 
       val causeMentions = eidosMentions._1
 

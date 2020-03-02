@@ -16,7 +16,7 @@ class TestGrounding2 extends EnglishTest {
 
   abstract class CompositionalGroundingTextTester {
     val groundTopN: Option[Int] = Option(5)
-    val threshold: Option[Float] = Option(0.3f)
+    val threshold: Option[Float] = Option(0.1f)
     val active: Boolean
 
     def fakeAnnotatedDoc(text: String, causeIntervals: Seq[Interval], effectIntervals: Seq[Interval],
@@ -72,7 +72,7 @@ class TestGrounding2 extends EnglishTest {
     def groundings(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): OntologyGroundings = {
       val ontologyGroundings: Seq[OntologyGrounding] =
         if (ontologyGrounder.isInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder]){
-          println("We are using the correct grounding function!")
+          println("\tWe are using the correct grounding function!")
           ontologyGrounder.asInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder].groundOntology(mention, topN = groundTopN, threshold = threshold, windowSize = windowSize)
         }
         else{
@@ -182,6 +182,7 @@ class TestGrounding2 extends EnglishTest {
       passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
         if (tester.active) {
           println("============================")
+          println("window size:", windowSize)
 
           println("\t", causeMentions.head.odinMention.text)
 
@@ -212,7 +213,7 @@ class TestGrounding2 extends EnglishTest {
       passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
         if (tester.active) {
           println("============================")
-
+          println("window size:", windowSize)
           println("\t", causeMentions.head.odinMention.text)
 
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)

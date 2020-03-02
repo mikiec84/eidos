@@ -159,19 +159,17 @@ class TestGrounding2 extends EnglishTest {
 
   {
     println("============================")
-    for (windowSize <- 0 to 2){
+    for (windowSize <- 0 to 4){
 
       behavior of "Grounding 1 Dup Window Size "+windowSize.toString
 
-      val text = "Conflict and widespread insecurity impact the humanitarian situation negatively and hamper humanitarian organizations from carrying out their activities in the deep field."
+      val text = "He said it did not contradict African Union policy of no recognition for leaders who take power by force, since both men were taking measures to ensure free and transparent elections."
 
-      val causeStart = 4
-      val causeEnd = 5
+      val causeStart = 16
+      val causeEnd = 17
 
       //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
-      println("start annotation")
-      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(4, 5)), Seq(Interval(4, 5)))
-      println("finished annotation")
+      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
 
       val causeMentions = eidosMentions._1
 
@@ -182,7 +180,37 @@ class TestGrounding2 extends EnglishTest {
           val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
           println("\t", matchedNodes)
           matchedNodes.contains(
-            "concept/causal_factor/entity/person_and_group/humanitarian_workers"
+            "concept/causal_factor/social_and_political/political/political_instability"
+          ) should be(true)
+        }
+      }
+    }
+  }
+
+  {
+    println("============================")
+    for (windowSize <- 0 to 3){
+
+      behavior of "Grounding 2 Dup Window Size "+windowSize.toString
+
+      val text = "Edwards cited aid agencies inside Somalia as saying they remain concerned about landmines and other security threats which are making access extremely dangerous."
+
+      val causeStart = 20
+      val causeEnd = 21
+
+      //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
+      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
+
+      val causeMentions = eidosMentions._1
+
+      passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
+        if (tester.active) {
+          println("\t", causeMentions.head.odinMention.text)
+
+          val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
+          println("\t", matchedNodes)
+          matchedNodes.contains(
+            "concept/causal_factor/infrastructure_access/road"
           ) should be(true)
         }
       }

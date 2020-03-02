@@ -173,7 +173,8 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       // Get the syntactic head of the mention.
       val syntacticHeadOpt = mention.odinMention.synHead
       // Make a new mention that's just the syntactic head of the original mention.
-      println("syntactic head opt:", syntacticHeadOpt)
+      println("\tsyntactic head opt:", syntacticHeadOpt)
+      println("\tsentence:", mention.odinMention.sentence)
       val mentionHeadOpt = syntacticHeadOpt.map ( syntacticHead =>
         new TextBoundMention(
           Seq("Mention_head"),
@@ -191,8 +192,8 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         getModifierMentions(headText, mention.odinMention)
       }.getOrElse(Seq.empty)
       val allMentions = mentionHeadOpt.toSeq ++ modifierMentions
-      println("all mentions in function")
-      println(allMentions.head.text)
+      println("\tall mentions in function")
+      println("\t",allMentions.head.text)
       // Get all groundings for each branch.
       val allSimiliarities = Map(
         CompositionalGrounder.PROPERTY ->

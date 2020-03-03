@@ -172,6 +172,9 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
     else {
       // Get the syntactic head of the mention.
       val syntacticHeadOpt = mention.odinMention.synHead
+      // Count the number of tokens in the sentence, so that the expanded window won't exceed the bounds.
+      val numTokenInSentence = mention.odinMention.sentenceObj.words.length
+      println("\tnumber of words in sentence:"+numTokenInSentence.toString)
       // Make a new mention that's just the syntactic head of the original mention.
       val mentionHeadOpt = syntacticHeadOpt.map ( syntacticHead =>
         new TextBoundMention(

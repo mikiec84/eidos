@@ -163,6 +163,9 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
     Seq(newOntologyGrounding(property, Some(CompositionalGrounder.PROPERTY)), process, concept)
   }
 
+  override def groundOntology(mention: EidosMention, topN: Option[Int] = None, threshold: Option[Float] = None): Seq[OntologyGrounding] = {
+    groundOntology(mention, topN, threshold, 0)
+  }
 
   def groundOntology(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): Seq[OntologyGrounding] = {
     // Do nothing to non-groundableType mentions
@@ -214,6 +217,8 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         newOntologyGrounding(goodSimilarities, Some(name))
       }.toSeq
 
+      println("good groundings")
+      println(goodGroundings)
       goodGroundings
     }
   }
@@ -232,11 +237,6 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       }
     }
     groundedOntologies
-
-  }
-
-  override def groundOntology(mention: EidosMention, topN: Option[Int] = None, threshold: Option[Float] = None): Seq[OntologyGrounding] = {
-    groundOntology(mention, topN, threshold, 0)
 
   }
 

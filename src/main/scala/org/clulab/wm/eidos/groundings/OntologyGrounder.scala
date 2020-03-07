@@ -179,8 +179,7 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       val mentionHeadOpt = syntacticHeadOpt.map ( syntacticHead =>
         new TextBoundMention(
           Seq("Mention_head"),
-          // TODO: this is not safe. Later check the left and right bound.
-          tokenInterval = Interval(syntacticHead-windowSize, syntacticHead+1+windowSize),
+          tokenInterval = Interval(scala.math.max(0, syntacticHead-windowSize), scala.math.min(syntacticHead+1+windowSize, numTokenInSentence)),
           sentence = mention.odinMention.sentence,
           document = mention.odinMention.document,
           keep = mention.odinMention.keep,
@@ -217,6 +216,23 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
 
       goodGroundings
     }
+  }
+
+  def groundOntology(mention: EidosMention, topN: Option[Int], threshold: Option[Float], iterativeFlag:Boolean, maxWindowSize:Int): Seq[OntologyGrounding] = {
+    var windowSize = 0
+    var continueFlag = true
+    var groundedOntologies:Seq[OntologyGrounding] = Seq(newOntologyGrounding())
+    while (continueFlag&(windowSize<maxWindowSize)){
+      groundedOntologies = groundOntology(mention, topN, threshold, windowSize)
+      if (groundedOntologies(2).nonEmpty){
+        return groundedOntologies
+      }
+      else{
+        windowSize+=1
+      }
+    }
+    groundedOntologies
+
   }
 
   override def groundOntology(mention: EidosMention, topN: Option[Int] = None, threshold: Option[Float] = None): Seq[OntologyGrounding] = {

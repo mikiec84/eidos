@@ -199,7 +199,7 @@ class TestGrounding2 extends EnglishTest {
   }
 
   {
-    for (windowSize <- 0 to 3){
+    for (windowSize <- 0 to 4){
 
       behavior of "Grounding 2 Dup Window Size "+windowSize.toString
 

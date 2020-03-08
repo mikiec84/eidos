@@ -177,7 +177,6 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       val syntacticHeadOpt = mention.odinMention.synHead
       // Count the number of tokens in the sentence, so that the expanded window won't exceed the bounds.
       val numTokenInSentence = mention.odinMention.sentenceObj.words.length
-      println("\tnumber of words in sentence:"+numTokenInSentence.toString)
       // Make a new mention that's just the syntactic head of the original mention.
       val mentionHeadOpt = syntacticHeadOpt.map ( syntacticHead =>
         new TextBoundMention(
@@ -195,7 +194,6 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         getModifierMentions(headText, mention.odinMention)
       }.getOrElse(Seq.empty)
       val allMentions = mentionHeadOpt.toSeq ++ modifierMentions
-      println("\tmention text for matching:" + allMentions.head.text)
       // Get all groundings for each branch.
       val allSimiliarities = Map(
         CompositionalGrounder.PROPERTY ->
@@ -206,7 +204,6 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
             allMentions.flatMap(m => w2v.calculateSimilarities(m.text.split(" "), conceptEmbeddingsSeq(CompositionalGrounder.CONCEPT)))
       )
       val effectiveThreshold = threshold.getOrElse(CompositionalGrounder.defaultThreshold)
-      println("\teffective threshold:"+effectiveThreshold.toString)
       val effectiveTopN = topN.getOrElse(CompositionalGrounder.defaultGroundTopN)
       val goodGroundings = allSimiliarities.map { case(name, similarities) =>
         val goodSimilarities = similarities
@@ -217,8 +214,6 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
         newOntologyGrounding(goodSimilarities, Some(name))
       }.toSeq
 
-      println("good groundings")
-      println(goodGroundings)
       goodGroundings
     }
   }
@@ -226,18 +221,40 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
   def groundOntology(mention: EidosMention, topN: Option[Int], threshold: Option[Float], iterativeFlag:Boolean, maxWindowSize:Int): Seq[OntologyGrounding] = {
     var windowSize = 0
     var continueFlag = true
-    var groundedOntologies:Seq[OntologyGrounding] = Seq(newOntologyGrounding())
-    while (continueFlag&(windowSize<maxWindowSize)){
-      groundedOntologies = groundOntology(mention, topN, threshold, windowSize)
-      if (groundedOntologies(2).nonEmpty){
-        return groundedOntologies
-      }
-      else{
+    // The final returned list of results. It should return a Seq of OntologyGrounding.
+    // (OntologyGrounding, OntologyGrounding, OntologyGrounding)
+    val groundedOntologiesFinal:scala.collection.mutable.Map[String, OntologyGrounding] = scala.collection.mutable.Map()
+
+    while (continueFlag&(windowSize<=maxWindowSize)){
+      println("====================")
+      println(s"\twindow size:${windowSize}")
+      val groundedOntologies = groundOntology(mention, topN, threshold, windowSize)
+      // Initialize the map with windowSize 0:
+      if (windowSize==0){
+        for (groundedOntology <- groundedOntologies) {
+          if (groundedOntology.headName.isDefined){
+            groundedOntologiesFinal(groundedOntology.headName.get)=groundedOntology
+          }
+        }
         windowSize+=1
       }
-    }
-    groundedOntologies
+      // When the window size is larger than 0, check the actual grounded ontologies.
+      // If the current ontology is empty, and the new grounded ontology is not empty, update it.
+      else{
+        for (groundedOntology <- groundedOntologies) {
+          if (groundedOntology.headName.isDefined){
+            val ontologyType = groundedOntology.headName.get
+            if (!groundedOntologiesFinal(ontologyType).nonEmpty & groundedOntology.nonEmpty){
+              groundedOntologiesFinal(ontologyType) = groundedOntology
+            }
+          }
+        }
+        windowSize+=1
+      }
+      println("\tgrounded:", groundedOntologiesFinal)
 
+    }
+    groundedOntologiesFinal.map{case(name, ontology)=>ontology}.toSeq
   }
 
 

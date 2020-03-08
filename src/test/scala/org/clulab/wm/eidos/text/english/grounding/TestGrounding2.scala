@@ -25,6 +25,7 @@ class TestGrounding2 extends EnglishTest {
 
     def allGroundingNames(mention: EidosMention, topN: Option[Int] = groundTopN, threshold: Option[Float] = threshold): Seq[String]
     def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): Seq[String]
+    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], iterativeFlag:Boolean, maxWindowSize:Int): Seq[String]
 
   }
 
@@ -50,6 +51,7 @@ class TestGrounding2 extends EnglishTest {
 
     def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float]): Seq[String] = Seq.empty
     def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], windowSize:Int): Seq[String] = Seq.empty
+    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], iterativeFlag:Boolean, maxWindowSize:Int): Seq[String] = Seq.empty
 
   }
 
@@ -73,6 +75,23 @@ class TestGrounding2 extends EnglishTest {
       val ontologyGroundings: Seq[OntologyGrounding] =
         if (ontologyGrounder.isInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder]){
           ontologyGrounder.asInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder].groundOntology(mention, topN = groundTopN, threshold = threshold, windowSize = windowSize)
+        }
+        else{
+          ontologyGrounder.groundOntology(mention, topN = groundTopN, threshold = threshold)
+        }
+      val groundings = ontologyGroundings.map { ontologyGrounding =>
+        val newName = name + ontologyGrounding.branch.map { branch => "/" + branch }.getOrElse("")
+
+        newName -> ontologyGrounding
+      }.toMap
+
+      groundings
+    }
+
+    def groundings(mention: EidosMention, topN: Option[Int], threshold: Option[Float], iterativeFlag:Boolean, maxWindowSize:Int): OntologyGroundings = {
+      val ontologyGroundings: Seq[OntologyGrounding] =
+        if (ontologyGrounder.isInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder]){
+          ontologyGrounder.asInstanceOf[org.clulab.wm.eidos.groundings.CompositionalGrounder].groundOntology(mention, topN = groundTopN, threshold = threshold, iterativeFlag=iterativeFlag, maxWindowSize = maxWindowSize)
         }
         else{
           ontologyGrounder.groundOntology(mention, topN = groundTopN, threshold = threshold)
@@ -129,6 +148,27 @@ class TestGrounding2 extends EnglishTest {
 
     }
 
+    def allGroundingNames(mention: EidosMention, topN: Option[Int], threshold: Option[Float], iterativeFlag:Boolean, maxWindowSize:Int): Seq[String] = {
+      val allGroundings = groundings(mention, topN, threshold, iterativeFlag = iterativeFlag, maxWindowSize = maxWindowSize)
+      val names = allGroundings.values.flatMap { ontologyGrounding =>
+        ontologyGrounding.grounding.map { grounding => grounding._1.name }
+      }.toSeq
+
+
+      val nameScoreTuple = allGroundings.values.flatMap { ontologyGrounding =>
+        ontologyGrounding.grounding.map { grounding => (grounding._1.name, grounding._2 )}
+      }.toSeq
+
+      println("\tmatched nodes:")
+      for (nameScore <- nameScoreTuple){
+        println("\t\t"+ nameScore._1+" "+ nameScore._2.toString)
+
+      }
+
+      names
+    }
+
+
     // to get both name AND score of groundings
     def allGroundingInfo(mention: EidosMention): Seq[(String,Float)] = {
       val allGroundings = groundings(mention, groundTopN, threshold)
@@ -168,65 +208,115 @@ class TestGrounding2 extends EnglishTest {
   val tester: CompositionalGroundingTextTester = CompositionalGroundingTextTester("wm_compositional")
 
   {
-    for (windowSize <- 0 to 4){
 
-      behavior of "Grounding 1 Dup Window Size "+windowSize.toString
+    behavior of "Grounding 1 "
 
-      val text = "He said it did not contradict African Union policy of no recognition for leaders who take power by force, since both men were taking measures to ensure free and transparent elections."
+    val text = "He said it did not contradict African Union policy of no recognition for leaders who take power by force, since both men were taking measures to ensure free and transparent elections."
 
-      val causeStart = 16
-      val causeEnd = 17
+    val causeStart = 16
+    val causeEnd = 17
 
-      //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
-      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
+    //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
+    val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
 
-      val causeMentions = eidosMentions._1
+    val causeMentions = eidosMentions._1
 
-      passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
-        if (tester.active) {
-          println("============================")
-          println("window size: "+  windowSize.toString)
+    passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
+      if (tester.active) {
 
-          println("\toriginal mention:"+ causeMentions.head.odinMention.text)
-
-          val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
-          matchedNodes.contains(
-            "wm_compositional/concept/causal_factor/social_and_political/political/political_instability"
-          ) should be(true)
-        }
+        val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, true, 4)
+        matchedNodes.contains(
+          "wm_compositional/concept/causal_factor/social_and_political/political/political_instability"
+        ) should be(true)
       }
     }
   }
 
   {
-    for (windowSize <- 0 to 4){
 
-      behavior of "Grounding 2 Dup Window Size "+windowSize.toString
+    behavior of "Grounding 2"
 
-      val text = "Edwards cited aid agencies inside Somalia as saying they remain concerned about landmines and other security threats which are making access extremely dangerous."
+    val text = "Edwards cited aid agencies inside Somalia as saying they remain concerned about landmines and other security threats which are making access extremely dangerous."
 
-      val causeStart = 20
-      val causeEnd = 21
+    val causeStart = 20
+    val causeEnd = 21
 
-      //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
-      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
+    //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
+    val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
 
-      val causeMentions = eidosMentions._1
+    val causeMentions = eidosMentions._1
 
-      passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
-        if (tester.active) {
-          println("============================")
-          println("window size: "+  windowSize.toString)
+    passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
+      if (tester.active) {
 
-          println("\toriginal mention:"+ causeMentions.head.odinMention.text)
-
-          val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
-          matchedNodes.contains(
-            "wm_compositional/concept/causal_factor/infrastructure_access/road"
-          ) should be(true)
-        }
+        val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, true, 4)
+        matchedNodes.contains(
+          "wm_compositional/concept/causal_factor/infrastructure_access/road"
+        ) should be(true)
       }
     }
   }
+
+//  {
+//    for (windowSize <- 0 to 4){
+//
+//      behavior of "Grounding 1 Dup Window Size "+windowSize.toString
+//
+//      val text = "He said it did not contradict African Union policy of no recognition for leaders who take power by force, since both men were taking measures to ensure free and transparent elections."
+//
+//      val causeStart = 16
+//      val causeEnd = 17
+//
+//      //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
+//      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
+//
+//      val causeMentions = eidosMentions._1
+//
+//      passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
+//        if (tester.active) {
+//          println("============================")
+//          println("window size: "+  windowSize.toString)
+//
+//          println("\toriginal mention:"+ causeMentions.head.odinMention.text)
+//
+//          val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
+//          matchedNodes.contains(
+//            "wm_compositional/concept/causal_factor/social_and_political/political/political_instability"
+//          ) should be(true)
+//        }
+//      }
+//    }
+//  }
+//
+//  {
+//    for (windowSize <- 0 to 4){
+//
+//      behavior of "Grounding 2 Dup Window Size "+windowSize.toString
+//
+//      val text = "Edwards cited aid agencies inside Somalia as saying they remain concerned about landmines and other security threats which are making access extremely dangerous."
+//
+//      val causeStart = 20
+//      val causeEnd = 21
+//
+//      //val eidosMentions = tester.fakeAnnotatedDoc(text, List(Interval(0, 4)), List(Interval(8, 10)))
+//      val eidosMentions = tester.fakeAnnotatedDoc(text, Seq(Interval(causeStart, causeEnd)), Seq(Interval(causeStart, causeEnd)))
+//
+//      val causeMentions = eidosMentions._1
+//
+//      passingTest should "process \"" + text + "\" cause correctly" taggedAs Somebody in {
+//        if (tester.active) {
+//          println("============================")
+//          println("window size: "+  windowSize.toString)
+//
+//          println("\toriginal mention:"+ causeMentions.head.odinMention.text)
+//
+//          val matchedNodes = tester.allGroundingNames(causeMentions.head, tester.groundTopN, tester.threshold, windowSize)
+//          matchedNodes.contains(
+//            "wm_compositional/concept/causal_factor/infrastructure_access/road"
+//          ) should be(true)
+//        }
+//      }
+//    }
+//  }
 
 }

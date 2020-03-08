@@ -223,6 +223,12 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
     var continueFlag = true
     // The final returned list of results. It should return a Seq of OntologyGrounding.
     // (OntologyGrounding, OntologyGrounding, OntologyGrounding)
+//    val groundedOntologiesFinal:scala.collection.mutable.Map[String, OntologyGrounding] = scala.collection.mutable.Map(
+//      CompositionalGrounder.CONCEPT->newOntologyGrounding(),
+//      CompositionalGrounder.PROPERTY->newOntologyGrounding(),
+//      CompositionalGrounder.PROCESS->newOntologyGrounding()
+//    )
+
     val groundedOntologiesFinal:scala.collection.mutable.Map[String, OntologyGrounding] = scala.collection.mutable.Map()
 
     while (continueFlag&(windowSize<=maxWindowSize)){
@@ -232,8 +238,8 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       // Initialize the map with windowSize 0:
       if (windowSize==0){
         for (groundedOntology <- groundedOntologies) {
-          if (groundedOntology.headName.isDefined){
-            groundedOntologiesFinal(groundedOntology.headName.get)=groundedOntology
+          if (groundedOntology.branch.isDefined){
+            groundedOntologiesFinal(groundedOntology.branch.get)=groundedOntology
           }
         }
         windowSize+=1
@@ -242,8 +248,8 @@ class CompositionalGrounder(name: String, domainOntology: DomainOntology, w2v: E
       // If the current ontology is empty, and the new grounded ontology is not empty, update it.
       else{
         for (groundedOntology <- groundedOntologies) {
-          if (groundedOntology.headName.isDefined){
-            val ontologyType = groundedOntology.headName.get
+          if (groundedOntology.branch.isDefined){
+            val ontologyType = groundedOntology.branch.get
             if (!groundedOntologiesFinal(ontologyType).nonEmpty & groundedOntology.nonEmpty){
               groundedOntologiesFinal(ontologyType) = groundedOntology
             }

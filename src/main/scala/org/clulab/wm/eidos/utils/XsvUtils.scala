@@ -38,9 +38,16 @@ class TsvReader() extends XsvReader(XsvUtils.tabChar) {
     XsvUtils.escapePairs.reverse.foldLeft(string) { (string, escapePair) => escapePair.unescape(string) }
   }
 
-  def readln(line: String): Array[String] = line
-      .split(separatorChar)
-      .map(unescape)
+  def readln(line: String): Array[String] = {
+    // Java will truncate unused columns from the back.  Therefore, add an extra,
+    // used column at the end, but then remove the extra value that results.
+    val count = line.count(_ == separatorChar) + 1
+
+    (line + separatorChar + ' ')
+        .split(separatorChar)
+        .take(count)
+        .map(unescape)
+  }
 }
 
 object TsvReader {

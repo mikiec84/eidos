@@ -41,6 +41,8 @@ class TsvReader() extends XsvReader(XsvUtils.tabChar) {
   def readln(line: String): Array[String] = {
     // Java will truncate unused columns from the back.  Therefore, add an extra,
     // used column at the end, but then remove the extra value that results.
+    // The alternative is to split on a regular expression and include -1 as the
+    // final arguments, but the programmer is too obstinate for that approach.
     val count = line.count(_ == separatorChar) + 1
 
     (line + separatorChar + ' ')
